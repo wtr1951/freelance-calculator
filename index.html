@@ -1,557 +1,1292 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>XySide | Freelance Invoice & Tax Calculator</title>
-  <meta name="description" content="A beautiful, free calculator for global freelancers. Compute invoice totals and instantly see your take-home pay after cross-border VAT / withholding tax." />
-
-  <!-- Google AdSense -->
+  <title>XySide | Freelance Financial Hub &amp; Invoice Calculator</title>
+  <meta name="description" content="XySide is a premium freelance financial hub with billing models, effective hourly rate analysis, late payment penalties, tiered taxes, and live invoice generation." />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7466854383553853" crossorigin="anonymous"></script>
-
-  <!-- Tailwind CSS (Play CDN) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-          },
-          colors: {
-            ink: '#06070f',
-          },
-          boxShadow: {
-            glow: '0 0 60px -15px rgba(99,102,241,0.45)',
-          },
-        },
-      },
-    };
-  </script>
-
-  <!-- Inter font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-
   <style>
-    html, body { font-family: 'Inter', sans-serif; }
+    :root {
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --ink: #111827;
+      --muted: #6b7280;
+      --soft: #eef2f7;
+      --line: #e5e7eb;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --blue-soft: #eff6ff;
+      --green: #059669;
+      --red: #dc2626;
+      --shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+      --radius: 8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
-      background-color: #06070f;
-      background-image:
-        radial-gradient(900px 600px at 12% -10%, rgba(79,70,229,0.20), transparent 60%),
-        radial-gradient(800px 600px at 100% 0%, rgba(168,85,247,0.16), transparent 55%),
-        radial-gradient(700px 500px at 50% 120%, rgba(56,189,248,0.12), transparent 60%);
-      min-height: 100vh;
-    }
-
-    /* Floating ambient glow blobs */
-    .blob {
-      position: fixed;
-      border-radius: 9999px;
-      filter: blur(90px);
-      opacity: 0.55;
-      z-index: 0;
-      pointer-events: none;
-      will-change: transform;
-    }
-    .blob-1 { top: -120px; left: -100px; width: 420px; height: 420px;
-      background: radial-gradient(circle at 30% 30%, #6366f1, transparent 70%);
-      animation: float1 16s ease-in-out infinite; }
-    .blob-2 { top: 10%; right: -140px; width: 460px; height: 460px;
-      background: radial-gradient(circle at 70% 30%, #a855f7, transparent 70%);
-      animation: float2 19s ease-in-out infinite; }
-    .blob-3 { bottom: -160px; left: 30%; width: 480px; height: 480px;
-      background: radial-gradient(circle at 50% 50%, #22d3ee, transparent 72%);
-      opacity: 0.35;
-      animation: float3 22s ease-in-out infinite; }
-
-    @keyframes float1 { 0%,100%{ transform: translate(0,0) scale(1);} 50%{ transform: translate(40px,30px) scale(1.08);} }
-    @keyframes float2 { 0%,100%{ transform: translate(0,0) scale(1);} 50%{ transform: translate(-50px,40px) scale(1.1);} }
-    @keyframes float3 { 0%,100%{ transform: translate(0,0) scale(1);} 50%{ transform: translate(30px,-40px) scale(1.06);} }
-
-    /* Glassmorphism */
-    .glass {
-      background: rgba(255,255,255,0.045);
-      backdrop-filter: blur(22px) saturate(140%);
-      -webkit-backdrop-filter: blur(22px) saturate(140%);
-      border: 1px solid rgba(255,255,255,0.09);
-      box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6), inset 0 1px 0 0 rgba(255,255,255,0.06);
-    }
-    .glass-soft {
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255,255,255,0.07);
-    }
-
-    /* Gradient border ring around the headline result */
-    .ring-grad { position: relative; }
-    .ring-grad::before {
-      content: "";
-      position: absolute; inset: 0;
-      border-radius: 1.5rem;
-      padding: 1px;
-      background: linear-gradient(135deg, rgba(99,102,241,0.8), rgba(168,85,247,0.6), rgba(34,211,238,0.5));
-      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor; mask-composite: exclude;
-      pointer-events: none;
-    }
-
-    /* Inputs */
-    .field {
-      background: rgba(10,12,24,0.55);
-      border: 1px solid rgba(255,255,255,0.10);
-      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
-    }
-    .field:focus-within {
-      border-color: rgba(129,140,248,0.7);
-      box-shadow: 0 0 0 4px rgba(99,102,241,0.18);
-      background: rgba(12,14,28,0.7);
-    }
-    .field input, .field select { background: transparent; outline: none; }
-    .field input::-webkit-outer-spin-button,
-    .field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .field input[type=number] { -moz-appearance: textfield; }
-    select option { background: #0b0d1a; color: #e5e7eb; }
-
-    /* Range slider */
-    .slider {
-      -webkit-appearance: none; appearance: none;
-      width: 100%; height: 8px; border-radius: 9999px;
-      background: linear-gradient(90deg, #6366f1 0%, #a855f7 var(--pct,40%), rgba(255,255,255,0.10) var(--pct,40%));
-      outline: none; cursor: pointer;
-    }
-    .slider::-webkit-slider-thumb {
-      -webkit-appearance: none; appearance: none;
-      height: 22px; width: 22px; border-radius: 9999px;
-      background: #ffffff; border: 0;
-      box-shadow: 0 0 0 5px rgba(99,102,241,0.30), 0 6px 16px rgba(0,0,0,0.5);
-      cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
-    }
-    .slider::-webkit-slider-thumb:hover { transform: scale(1.18); box-shadow: 0 0 0 7px rgba(99,102,241,0.30), 0 6px 16px rgba(0,0,0,0.55); }
-    .slider::-moz-range-thumb {
-      height: 22px; width: 22px; border-radius: 9999px;
-      background: #ffffff; border: 0;
-      box-shadow: 0 0 0 5px rgba(99,102,241,0.30), 0 6px 16px rgba(0,0,0,0.5);
-      cursor: pointer;
-    }
-
-    .grad-text {
-      background: linear-gradient(120deg, #818cf8 0%, #c084fc 45%, #67e8f9 100%);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-    }
-
-    /* Tax preset chips */
-    .chip {
-      transition: all .18s ease;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.03);
-    }
-    .chip:hover { border-color: rgba(129,140,248,0.6); color: #fff; transform: translateY(-1px); }
-    .chip.active {
-      border-color: transparent;
-      background: linear-gradient(120deg, #6366f1, #a855f7);
-      color: #fff; box-shadow: 0 8px 20px -8px rgba(124,58,237,0.7);
-    }
-
-    /* Subtle pop animation when the headline number changes */
-    @keyframes pop { 0%{ transform: scale(0.985); } 60%{ transform: scale(1.012);} 100%{ transform: scale(1);} }
-    .pop { animation: pop .35s ease; }
-
-    /* Ad placeholder dashed shimmer */
-    .ad-slot {
-      border: 1.5px dashed rgba(255,255,255,0.16);
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
       background:
-        repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0 12px, rgba(255,255,255,0.0) 12px 24px);
-    }
-    .ad-slot ins.adsbygoogle { width: 100%; }
-    /* Once a real AdSense creative fills the slot, hide the placeholder caption */
-    .ad-slot:has(ins[data-ad-status="filled"]) .ad-fallback { display: none; }
-    .ad-slot:has(ins[data-ad-status="filled"]) {
-      border-style: solid; border-color: rgba(255,255,255,0.08); background: transparent;
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 42%, #f3f4f6 100%);
+      color: var(--ink);
+      line-height: 1.5;
+      letter-spacing: 0;
     }
 
-    ::selection { background: rgba(129,140,248,0.35); }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(18px);
+      background: rgba(255, 255, 255, 0.86);
+      border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+    }
+
+    .header-inner {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--blue), #0f172a);
+      box-shadow: 0 12px 30px rgba(37, 99, 235, 0.24);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #4b5563;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .nav a {
+      padding: 9px 12px;
+      border-radius: 999px;
+    }
+
+    .nav a:hover {
+      color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0 56px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+      gap: 32px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      background: var(--blue-soft);
+      color: var(--blue-dark);
+      font-size: 12px;
+      font-weight: 750;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(38px, 6vw, 68px);
+      line-height: 0.96;
+      letter-spacing: 0;
+      color: #0f172a;
+    }
+
+    .hero-copy {
+      max-width: 680px;
+      margin: 20px 0 0;
+      color: #4b5563;
+      font-size: 18px;
+    }
+
+    .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .mini-stat {
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+    }
+
+    .mini-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .mini-stat strong {
+      display: block;
+      margin-top: 6px;
+      color: var(--blue);
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 24px;
+      align-items: start;
+    }
+
+    .controls { grid-column: span 5; }
+    .output { grid-column: span 7; display: grid; gap: 20px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 22px;
+    }
+
+    .panel + .panel {
+      border-top: 1px solid var(--line);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .section-title h2, .section-title h3 {
+      margin: 0;
+      color: #111827;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .section-title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f3f4f6;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 8px;
+      color: #4b5563;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .tab[aria-selected="true"] {
+      color: #ffffff;
+      background: var(--blue);
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .span-2 { grid-column: span 2; }
+    .model-panel[hidden] { display: none; }
+
+    label {
+      display: block;
+      color: #374151;
+      font-size: 12px;
+      font-weight: 750;
+      margin-bottom: 7px;
+    }
+
+    input, select {
+      width: 100%;
+      height: 44px;
+      border: 1px solid #d1d5db;
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--ink);
+      padding: 0 12px;
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .with-prefix {
+      position: relative;
+    }
+
+    .with-prefix span {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .with-prefix input {
+      padding-left: 32px;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      height: 8px;
+      padding: 0;
+      border: 0;
+      accent-color: var(--blue);
+    }
+
+    .range-value {
+      min-width: 70px;
+      color: var(--blue);
+      font-weight: 850;
+      text-align: right;
+    }
+
+    .collapse-button, .secondary-button, .primary-button, .ghost-button, .remove-button {
+      min-height: 42px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      padding: 0 14px;
+      font-weight: 800;
+      font-size: 13px;
+      transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+    }
+
+    .primary-button {
+      color: #ffffff;
+      background: var(--blue);
+      border-color: var(--blue);
+      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.22);
+    }
+
+    .primary-button:hover { background: var(--blue-dark); }
+    .secondary-button, .collapse-button, .ghost-button {
+      color: #374151;
+      background: #ffffff;
+    }
+    .secondary-button:hover, .collapse-button:hover, .ghost-button:hover {
+      border-color: #bfdbfe;
+      background: var(--blue-soft);
+      color: var(--blue-dark);
+    }
+
+    .remove-button {
+      width: 42px;
+      padding: 0;
+      color: var(--red);
+      background: #fff;
+    }
+
+    .late-content[hidden] { display: none; }
+
+    .tax-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .tax-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 110px 42px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .kpi {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.05);
+      min-width: 0;
+    }
+
+    .kpi span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .kpi strong {
+      display: block;
+      margin-top: 8px;
+      color: var(--blue);
+      font-size: clamp(22px, 3vw, 34px);
+      line-height: 1;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .kpi small {
+      display: block;
+      margin-top: 8px;
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .breakdown h3 {
+      margin: 0 0 12px;
+      font-size: 14px;
+    }
+
+    .line-list {
+      display: grid;
+      gap: 9px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .line-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: #4b5563;
+      font-size: 13px;
+      border-bottom: 1px solid #f3f4f6;
+      padding-bottom: 9px;
+    }
+
+    .line-list strong {
+      color: #111827;
+      white-space: nowrap;
+    }
+
+    .invoice-shell {
+      padding: 28px;
+      color: #111827;
+    }
+
+    .invoice-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px dashed #d1d5db;
+      padding-bottom: 22px;
+      margin-bottom: 22px;
+    }
+
+    .invoice-title {
+      margin: 0;
+      color: #0f172a;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    .invoice-meta {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .invoice-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .invoice-table th {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 0;
+    }
+
+    .invoice-table th:last-child, .invoice-table td:last-child {
+      text-align: right;
+    }
+
+    .invoice-table td {
+      padding: 13px 0;
+      border-bottom: 1px solid #f3f4f6;
+      color: #374151;
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    .invoice-table .deduction td:last-child { color: var(--red); }
+    .invoice-table .addition td:last-child { color: var(--green); }
+
+    .invoice-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px dashed #d1d5db;
+    }
+
+    .invoice-total span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .invoice-total strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--blue);
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .invoice-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .footer {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .footer nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .footer a:hover { color: var(--blue); }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 30;
+      padding: 12px 14px;
+      color: #ffffff;
+      background: #111827;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 980px) {
+      .hero, .workspace { grid-template-columns: 1fr; }
+      .controls, .output { grid-column: auto; }
+      .insights-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .breakdown { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .header-inner { min-height: auto; padding: 16px 0; align-items: flex-start; flex-direction: column; }
+      .nav { width: 100%; overflow-x: auto; padding-bottom: 2px; }
+      .page { padding-top: 32px; }
+      .hero-metrics, .form-grid, .insights-grid { grid-template-columns: 1fr; }
+      .span-2 { grid-column: auto; }
+      .tax-row { grid-template-columns: 1fr 92px 42px; }
+      .invoice-top, .invoice-total { flex-direction: column; align-items: flex-start; }
+      .invoice-meta { text-align: left; }
+      .invoice-actions { justify-content: stretch; flex-direction: column; }
+      .invoice-actions button { width: 100%; }
+      h1 { font-size: 42px; }
+    }
+
+    @media print {
+      @page { size: A4; margin: 18mm; }
+      body { background: #ffffff; }
+      body * { visibility: hidden !important; }
+      #invoiceCard, #invoiceCard * { visibility: visible !important; }
+      #invoiceCard {
+        position: absolute;
+        inset: 0 auto auto 0;
+        width: 100%;
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+      }
+      .invoice-actions { display: none !important; }
+    }
   </style>
 </head>
-
-<body class="text-slate-200 antialiased selection:text-white">
-  <!-- Ambient glow blobs -->
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
-  <div class="blob blob-3"></div>
-
-  <div class="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-
-    <!-- Header -->
-    <header class="flex flex-wrap items-center justify-between gap-4 mb-10">
-      <div class="flex items-center gap-3">
-        <div class="grid place-items-center h-11 w-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 shadow-glow">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="2" width="16" height="20" rx="2"></rect>
-            <path d="M8 6h8M8 10h8M8 14h5"></path>
-          </svg>
-        </div>
-        <div>
-          <a href="/" class="text-sm font-semibold tracking-wide text-white leading-tight hover:text-indigo-100 transition-colors">XySide</a>
-          <p class="text-[11px] text-slate-400 leading-tight">Freelance toolkit</p>
-        </div>
-      </div>
-      <nav class="hidden md:flex items-center gap-1 glass-soft rounded-full p-1 text-sm font-medium text-slate-300" aria-label="Primary navigation">
-        <a href="/" class="rounded-full px-4 py-2 text-white bg-white/10">Home</a>
-        <a href="/blog/tax-deductions.html" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white transition-colors">Tax Guide</a>
-        <a href="/privacy.html" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white transition-colors">Privacy Policy</a>
-        <a href="/terms.html" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white transition-colors">Terms</a>
+<body>
+  <header class="site-header no-print">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="XySide home">
+        <span class="brand-mark">X</span>
+        <span>XySide</span>
+      </a>
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="/">Dashboard</a>
+        <a href="/blog/">Blog</a>
+        <a href="/blog/tax-deductions.html">Tax Guide</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
       </nav>
-      <div class="hidden sm:flex items-center gap-2 glass-soft rounded-full px-4 py-1.5 text-xs text-slate-300">
-        <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        100% free &middot; no sign-up
-      </div>
-    </header>
+    </div>
+  </header>
 
-    <!-- Hero -->
-    <section class="text-center mb-10 sm:mb-14">
-      <span class="inline-flex items-center gap-2 glass-soft rounded-full px-4 py-1.5 text-xs font-medium text-indigo-200 mb-5">
-        🌍 Built for global freelancers
-      </span>
-      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.05]">
-        XySide<br class="hidden sm:block" />
-        <span class="grad-text">Invoice &amp; Tax Calculator</span>
-      </h1>
-      <p class="mt-5 max-w-2xl mx-auto text-base sm:text-lg text-slate-400">
-        Use the Freelance Invoice &amp; Tax Calculator to price your work, dial in the cross-border VAT / withholding rate, and instantly see the amount that actually lands in your account.
-      </p>
+  <main class="page">
+    <section class="hero">
+      <div>
+        <span class="eyebrow">Freelance Financial Hub</span>
+        <h1>XySide billing, tax, and invoice workspace.</h1>
+        <p class="hero-copy">
+          Model project revenue, platform fees, late-payment interest, tiered tax exposure, unpaid time, and a live invoice in one clean financial command center.
+        </p>
+      </div>
+      <div class="hero-metrics" aria-label="Live headline metrics">
+        <div class="mini-stat">
+          <span>Net Take Home</span>
+          <strong id="heroNet">$0.00</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Effective Hourly</span>
+          <strong id="heroHourly">$0.00</strong>
+        </div>
+      </div>
     </section>
 
-    <!-- Main grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <section class="workspace" aria-label="Freelance finance calculator">
+      <div class="controls card">
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h2>Billing model</h2>
+              <p>Switch the commercial structure without losing your finance settings.</p>
+            </div>
+          </div>
 
-      <!-- LEFT: Calculator inputs -->
-      <div class="lg:col-span-3 glass rounded-3xl p-6 sm:p-8">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-semibold text-white">Invoice details</h2>
-          <!-- Currency selector -->
-          <label class="field flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15.3 15.3 0 0 1 0 20M12 2a15.3 15.3 0 0 0 0 20"></path></svg>
-            <select id="currency" class="text-sm font-medium text-white pr-1">
-              <option value="USD">USD $</option>
-              <option value="EUR">EUR €</option>
-              <option value="GBP">GBP £</option>
-              <option value="JPY">JPY ¥</option>
-              <option value="CNY">CNY ¥</option>
-              <option value="INR">INR ₹</option>
-              <option value="CAD">CAD $</option>
-              <option value="AUD">AUD $</option>
-              <option value="SGD">SGD $</option>
-              <option value="CHF">CHF</option>
-              <option value="BRL">BRL R$</option>
-            </select>
-          </label>
+          <div class="tabs" role="tablist" aria-label="Billing models">
+            <button class="tab" type="button" role="tab" aria-selected="true" data-model="fixed">Fixed-Price</button>
+            <button class="tab" type="button" role="tab" aria-selected="false" data-model="hourly">Hourly</button>
+            <button class="tab" type="button" role="tab" aria-selected="false" data-model="retainer">Retainer</button>
+          </div>
+
+          <div class="form-grid">
+            <div>
+              <label for="clientName">Client</label>
+              <input id="clientName" type="text" value="Acme Studio" />
+            </div>
+            <div>
+              <label for="projectName">Project</label>
+              <input id="projectName" type="text" value="Product strategy sprint" />
+            </div>
+            <div>
+              <label for="currency">Currency</label>
+              <select id="currency">
+                <option value="USD">USD - US Dollar</option>
+                <option value="CAD">CAD - Canadian Dollar</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="GBP">GBP - British Pound</option>
+                <option value="CNY">CNY - Chinese Yuan</option>
+              </select>
+            </div>
+            <div>
+              <label for="invoiceNumber">Invoice number</label>
+              <input id="invoiceNumber" type="text" value="XS-2026-001" />
+            </div>
+          </div>
         </div>
 
-        <!-- Unit price + Quantity -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div class="panel">
+          <div class="model-panel" data-panel="fixed">
+            <div class="form-grid">
+              <div class="span-2">
+                <label for="fixedAmount">Project fixed price</label>
+                <div class="with-prefix"><span data-currency-symbol>$</span><input id="fixedAmount" type="number" min="0" step="100" value="12000" /></div>
+              </div>
+              <div class="span-2">
+                <label for="fixedHours">Estimated delivery hours</label>
+                <input id="fixedHours" type="number" min="1" step="1" value="160" />
+              </div>
+            </div>
+          </div>
+
+          <div class="model-panel" data-panel="hourly" hidden>
+            <div class="form-grid">
+              <div>
+                <label for="hourlyRate">Hourly rate</label>
+                <div class="with-prefix"><span data-currency-symbol>$</span><input id="hourlyRate" type="number" min="0" step="5" value="95" /></div>
+              </div>
+              <div>
+                <label for="hoursPerWeek">Hours per week</label>
+                <input id="hoursPerWeek" type="number" min="0" step="1" value="30" />
+              </div>
+              <div class="span-2">
+                <label for="durationWeeks">Project duration in weeks</label>
+                <input id="durationWeeks" type="number" min="1" step="1" value="8" />
+              </div>
+            </div>
+          </div>
+
+          <div class="model-panel" data-panel="retainer" hidden>
+            <div class="form-grid">
+              <div>
+                <label for="retainerMonthly">Monthly retainer</label>
+                <div class="with-prefix"><span data-currency-symbol>$</span><input id="retainerMonthly" type="number" min="0" step="100" value="6500" /></div>
+              </div>
+              <div>
+                <label for="retainerMonths">Months</label>
+                <input id="retainerMonths" type="number" min="1" step="1" value="3" />
+              </div>
+              <div class="span-2">
+                <label for="retainerHours">Included hours per month</label>
+                <input id="retainerHours" type="number" min="1" step="1" value="80" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h3>Fees, expenses, and unpaid time</h3>
+              <p>Turn headline revenue into a realistic hourly ROI.</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div>
+              <label for="platformPreset">Platform / processor</label>
+              <select id="platformPreset">
+                <option value="10">Upwork - 10%</option>
+                <option value="2.9">Stripe - 2.9%</option>
+                <option value="0">Direct client - 0%</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div>
+              <label for="platformFee">Fee rate (%)</label>
+              <input id="platformFee" type="number" min="0" max="60" step="0.1" value="10" />
+            </div>
+            <div class="span-2">
+              <label for="operatingExpenses">Operating hard costs</label>
+              <div class="with-prefix"><span data-currency-symbol>$</span><input id="operatingExpenses" type="number" min="0" step="25" value="650" /></div>
+            </div>
+            <div class="span-2">
+              <label for="unpaidDays">Unpaid days reserve</label>
+              <div class="range-row">
+                <input id="unpaidDays" type="range" min="0" max="60" step="1" value="20" />
+                <span class="range-value"><span id="unpaidDaysOut">20</span> days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h3>Late Payment Penalty Terms</h3>
+              <p>Model interest owed when a client pays late.</p>
+            </div>
+            <button id="lateToggle" class="collapse-button" type="button" aria-expanded="true">Collapse</button>
+          </div>
+          <div id="lateContent" class="late-content">
+            <div class="form-grid">
+              <div>
+                <label for="paymentTerm">Payment cycle</label>
+                <select id="paymentTerm">
+                  <option value="0">Due Immediately</option>
+                  <option value="30" selected>Net 30</option>
+                  <option value="60">Net 60</option>
+                </select>
+              </div>
+              <div>
+                <label for="daysPastDue">Days past due</label>
+                <input id="daysPastDue" type="number" min="0" step="1" value="14" />
+              </div>
+              <div class="span-2">
+                <label for="annualInterest">Annual interest rate (%)</label>
+                <input id="annualInterest" type="number" min="0" max="100" step="0.1" value="8" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h3>Multi-tier tax brackets</h3>
+              <p>Standard progressive tax calculation on taxable freelance income.</p>
+            </div>
+            <button id="addBracket" class="secondary-button" type="button">Add Tax Bracket</button>
+          </div>
+          <div id="taxBracketList" class="tax-list" aria-label="Tax brackets"></div>
+        </div>
+      </div>
+
+      <div class="output">
+        <section class="card panel" aria-label="Financial insights">
+          <div class="section-title">
+            <div>
+              <h2>Financial Insights</h2>
+              <p>Live take-home, billing efficiency, tax allocation, and client total.</p>
+            </div>
+          </div>
+          <div class="insights-grid">
+            <div class="kpi">
+              <span>Client total due</span>
+              <strong id="clientTotal">$0.00</strong>
+              <small>Service revenue plus late interest</small>
+            </div>
+            <div class="kpi">
+              <span>Your take-home</span>
+              <strong id="netTakeHome">$0.00</strong>
+              <small>After fees, costs, and estimated tax</small>
+            </div>
+            <div class="kpi">
+              <span>Effective hourly rate</span>
+              <strong id="effectiveHourly">$0.00</strong>
+              <small>Adjusted for unpaid days</small>
+            </div>
+            <div class="kpi">
+              <span>Nominal hourly rate</span>
+              <strong id="nominalHourly">$0.00</strong>
+              <small>Before deductions and unpaid reserve</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="card panel breakdown" aria-label="Calculation breakdown">
           <div>
-            <label for="price" class="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"></path><circle cx="7" cy="7" r="1.2" fill="currentColor"></circle></svg>
-              Unit price
-            </label>
-            <div class="field rounded-xl px-4 py-3 flex items-center gap-2">
-              <span id="sym1" class="text-slate-400 text-lg select-none">$</span>
-              <input id="price" type="number" inputmode="decimal" min="0" step="0.01" value="100"
-                     class="w-full text-lg font-semibold text-white placeholder-slate-500" placeholder="0.00" />
-            </div>
+            <h3>Revenue and deductions</h3>
+            <ul class="line-list">
+              <li><span>Base service revenue</span><strong id="baseRevenue">$0.00</strong></li>
+              <li><span>Late payment interest</span><strong id="lateInterest">$0.00</strong></li>
+              <li><span>Platform / processor fee</span><strong id="platformFeeOut">$0.00</strong></li>
+              <li><span>Operating hard costs</span><strong id="expensesOut">$0.00</strong></li>
+              <li><span>Total estimated tax</span><strong id="taxOut">$0.00</strong></li>
+            </ul>
           </div>
-
           <div>
-            <label for="qty" class="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-fuchsia-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"></path></svg>
-              Quantity / hours
-            </label>
-            <div class="field rounded-xl px-4 py-3 flex items-center gap-2">
-              <span class="text-slate-400 text-lg select-none">×</span>
-              <input id="qty" type="number" inputmode="decimal" min="0" step="1" value="1"
-                     class="w-full text-lg font-semibold text-white placeholder-slate-500" placeholder="0" />
-            </div>
+            <h3>Tax bracket allocation</h3>
+            <ul id="taxAllocation" class="line-list"></ul>
           </div>
-        </div>
+        </section>
 
-        <!-- Subtotal readout -->
-        <div class="glass-soft rounded-2xl px-5 py-4 mb-7 flex items-center justify-between">
-          <span class="text-sm text-slate-400">Subtotal (before tax)</span>
-          <span id="subtotal" class="text-xl font-bold text-white tabular-nums">$100.00</span>
-        </div>
-
-        <!-- Tax slider -->
-        <div class="mb-2 flex items-end justify-between">
-          <label for="vat" class="flex items-center gap-2 text-sm font-medium text-slate-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>
-            Cross-border VAT / Tax rate
-          </label>
-          <span id="vatLabel" class="text-2xl font-extrabold grad-text tabular-nums">20%</span>
-        </div>
-        <input id="vat" type="range" min="0" max="40" step="0.5" value="20" class="slider my-4" />
-        <div class="flex justify-between text-[11px] text-slate-500 mb-5">
-          <span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span>
-        </div>
-
-        <!-- Preset chips -->
-        <div class="flex flex-wrap gap-2">
-          <span class="text-xs text-slate-500 self-center mr-1">Quick presets:</span>
-          <button class="chip rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-300" data-vat="0">0% · None</button>
-          <button class="chip rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-300" data-vat="7.5">7.5% · US est.</button>
-          <button class="chip rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-300" data-vat="19">19% · DE</button>
-          <button class="chip rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-300" data-vat="20">20% · UK/EU</button>
-          <button class="chip rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-300" data-vat="23">23% · IE/PT</button>
-        </div>
-      </div>
-
-      <!-- RIGHT: Result + Ad -->
-      <div class="lg:col-span-2 flex flex-col gap-6">
-
-        <!-- Take-home result -->
-        <div class="ring-grad glass rounded-3xl p-6 sm:p-7 relative overflow-hidden">
-          <div class="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-fuchsia-500/20 blur-3xl"></div>
-          <div class="relative">
-            <p class="flex items-center gap-2 text-sm font-medium text-slate-300">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
-              Your take-home
-            </p>
-            <p id="takeHome" class="mt-2 text-4xl sm:text-5xl font-black text-white tracking-tight tabular-nums">$80.00</p>
-            <p class="mt-1 text-xs text-slate-400">After deducting <span id="vatInline" class="text-slate-300 font-medium">20%</span> tax</p>
-
-            <div class="mt-6 space-y-3">
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-slate-400">Gross subtotal</span>
-                <span id="grossOut" class="font-semibold text-slate-100 tabular-nums">$100.00</span>
+        <section>
+          <article id="invoiceCard" class="card invoice-shell" aria-label="Live invoice preview">
+            <div class="invoice-top">
+              <div>
+                <p class="eyebrow" style="margin-bottom: 12px;">Live Invoice</p>
+                <h2 class="invoice-title">XySide Invoice</h2>
+                <p style="margin: 8px 0 0; color: var(--muted);">Prepared for <strong id="invoiceClient">Acme Studio</strong></p>
               </div>
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-slate-400">Tax / VAT deducted</span>
-                <span id="taxAmt" class="font-semibold text-rose-300 tabular-nums">−$20.00</span>
-              </div>
-              <div class="h-px bg-white/10 my-1"></div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-white">Net to your account</span>
-                <span id="netOut" class="text-lg font-bold grad-text tabular-nums">$80.00</span>
+              <div class="invoice-meta">
+                <div><strong id="invoiceNumberOut">XS-2026-001</strong></div>
+                <div id="invoiceDateOut">Issue date</div>
+                <div id="invoiceTermsOut">Net 30</div>
               </div>
             </div>
 
-            <!-- effective rate bar -->
-            <div class="mt-6">
-              <div class="flex justify-between text-[11px] text-slate-500 mb-1.5">
-                <span>Take-home</span><span>Tax</span>
+            <table class="invoice-table">
+              <thead>
+                <tr>
+                  <th>Line item</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong id="invoiceProject">Product strategy sprint</strong><br><span id="invoiceModel">Fixed-Price engagement</span></td>
+                  <td id="invoiceBase">$0.00</td>
+                </tr>
+                <tr class="addition">
+                  <td>Late payment interest</td>
+                  <td id="invoiceInterest">$0.00</td>
+                </tr>
+                <tr>
+                  <td>Client total due</td>
+                  <td id="invoiceClientTotal">$0.00</td>
+                </tr>
+                <tr class="deduction">
+                  <td>Platform / processor fee</td>
+                  <td id="invoicePlatform">-$0.00</td>
+                </tr>
+                <tr class="deduction">
+                  <td>Operating hard costs</td>
+                  <td id="invoiceExpenses">-$0.00</td>
+                </tr>
+                <tr class="deduction">
+                  <td>Estimated progressive tax</td>
+                  <td id="invoiceTax">-$0.00</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="invoice-total">
+              <div>
+                <span>Net to freelancer</span>
+                <strong id="invoiceNet">$0.00</strong>
               </div>
-              <div class="h-2.5 w-full rounded-full bg-white/10 overflow-hidden flex">
-                <div id="barNet" class="h-full bg-gradient-to-r from-emerald-400 to-teal-400" style="width:80%"></div>
-                <div id="barTax" class="h-full bg-gradient-to-r from-fuchsia-500 to-indigo-500" style="width:20%"></div>
+              <div style="color: var(--muted); font-size: 13px;">
+                Effective hourly: <strong id="invoiceEffective">$0.00</strong>
               </div>
             </div>
+          </article>
+          <div class="invoice-actions no-print">
+            <button id="printInvoice" class="primary-button" type="button">Download Invoice (PDF)</button>
+            <button id="copyInvoice" class="ghost-button" type="button">Copy HTML Code</button>
           </div>
-        </div>
-
-        <!-- Ad Space — Google AdSense (publisher ca-pub-7466854383553853) -->
-        <div class="ad-slot glass-soft rounded-3xl p-6 grid place-items-center text-center min-h-[260px] overflow-hidden"
-             aria-label="Advertisement space" role="complementary">
-          <!-- Live ad unit. Replace data-ad-slot="0000000000" with your real 10-digit
-               slot ID from AdSense → Ads → By ad unit → Display ad. -->
-          <ins class="adsbygoogle"
-               style="display:block"
-               data-ad-client="ca-pub-7466854383553853"
-               data-ad-slot="0000000000"
-               data-ad-format="auto"
-               data-full-width-responsive="true"></ins>
-          <!-- Elegant placeholder, shown until a real ad fills the slot -->
-          <div class="ad-fallback space-y-2">
-            <div class="mx-auto grid place-items-center h-10 w-10 rounded-xl bg-white/5 border border-white/10">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 9h18"></path></svg>
-            </div>
-            <p class="text-sm font-semibold text-slate-300 tracking-wide">Ad Space</p>
-            <p class="text-[11px] text-slate-500 max-w-[200px] mx-auto">Reserved for Google AdSense · 300×250</p>
-          </div>
-        </div>
-
+        </section>
       </div>
-    </div>
+    </section>
+  </main>
 
-    <!-- Secondary Ad Space — Google AdSense leaderboard -->
-    <div class="ad-slot glass-soft rounded-3xl p-5 mt-6 grid place-items-center text-center min-h-[110px] overflow-hidden"
-         aria-label="Advertisement space" role="complementary">
-      <!-- Live ad unit. Replace data-ad-slot="0000000000" with your real slot ID. -->
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-7466854383553853"
-           data-ad-slot="0000000000"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <div class="ad-fallback">
-        <p class="text-sm font-semibold text-slate-300 tracking-wide">Ad Space</p>
-        <p class="text-[11px] text-slate-500">Reserved for Google AdSense · 728×90 leaderboard</p>
-      </div>
-    </div>
+  <footer class="footer no-print">
+    <div>&copy; 2026 XySide. All rights reserved.</div>
+    <nav aria-label="Footer navigation">
+      <a href="/">Calculator</a>
+      <a href="/blog/">Blog</a>
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Service</a>
+    </nav>
+  </footer>
 
-    <!-- Footer -->
-    <footer class="mt-12 text-center">
-      <nav class="mx-auto mb-5 flex max-w-2xl flex-wrap items-center justify-center gap-2 text-xs font-medium text-slate-400" aria-label="Footer navigation">
-        <a href="/" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:border-indigo-300/50 hover:text-white transition-colors">Calculator</a>
-        <a href="/blog/tax-deductions.html" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:border-indigo-300/50 hover:text-white transition-colors">Tax Guide</a>
-        <a href="/blog/" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:border-indigo-300/50 hover:text-white transition-colors">Blog</a>
-        <a href="/privacy.html" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:border-indigo-300/50 hover:text-white transition-colors">Privacy Policy</a>
-        <a href="/terms.html" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:border-indigo-300/50 hover:text-white transition-colors">Terms of Service</a>
-      </nav>
-      <p class="text-xs text-slate-500 max-w-2xl mx-auto">
-        Estimates only. Actual VAT, withholding, and income-tax obligations vary by country and treaty. Always confirm with a qualified local tax advisor.
-      </p>
-      <p class="mt-3 text-xs text-slate-600">
-        &copy; 2026 XySide. All rights reserved.
-      </p>
-    </footer>
-  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite">Copied invoice HTML.</div>
 
   <script>
     (function () {
-      'use strict';
+      "use strict";
 
       const $ = (id) => document.getElementById(id);
-      const els = {
-        price:    $('price'),
-        qty:      $('qty'),
-        vat:      $('vat'),
-        currency: $('currency'),
-        sym1:     $('sym1'),
-        vatLabel: $('vatLabel'),
-        vatInline:$('vatInline'),
-        subtotal: $('subtotal'),
-        grossOut: $('grossOut'),
-        taxAmt:   $('taxAmt'),
-        takeHome: $('takeHome'),
-        netOut:   $('netOut'),
-        barNet:   $('barNet'),
-        barTax:   $('barTax'),
+      const moneySymbols = { USD: "$", CAD: "$", EUR: "EUR ", GBP: "GBP ", CNY: "CNY " };
+      const currencyCodes = { USD: "USD", CAD: "CAD", EUR: "EUR", GBP: "GBP", CNY: "CNY" };
+      const state = {
+        model: "fixed",
+        brackets: [
+          { limit: 12000, rate: 10 },
+          { limit: "", rate: 22 }
+        ]
       };
 
-      // Currency symbols for the inline prefix on the price input
-      const SYMBOLS = {
-        USD:'$', EUR:'€', GBP:'£', JPY:'¥', CNY:'¥', INR:'₹',
-        CAD:'$', AUD:'$', SGD:'$', CHF:'Fr', BRL:'R$'
-      };
+      const fields = [
+        "clientName", "projectName", "currency", "invoiceNumber",
+        "fixedAmount", "fixedHours", "hourlyRate", "hoursPerWeek", "durationWeeks",
+        "retainerMonthly", "retainerMonths", "retainerHours", "platformPreset",
+        "platformFee", "operatingExpenses", "unpaidDays", "paymentTerm",
+        "daysPastDue", "annualInterest"
+      ].reduce((acc, id) => {
+        acc[id] = $(id);
+        return acc;
+      }, {});
 
-      // Format a number as currency using the user's chosen currency code.
-      function fmt(value) {
-        const code = els.currency.value;
-        const n = isFinite(value) ? value : 0;
+      function numberFrom(input, fallback) {
+        const value = parseFloat(input && input.value);
+        return Number.isFinite(value) ? value : fallback;
+      }
+
+      function currencySymbol() {
+        return moneySymbols[fields.currency.value] || "$";
+      }
+
+      function formatMoney(value) {
+        const code = currencyCodes[fields.currency.value] || "USD";
+        const amount = Number.isFinite(value) ? value : 0;
         try {
-          return new Intl.NumberFormat('en-US', {
-            style: 'currency',
+          return new Intl.NumberFormat("en-US", {
+            style: "currency",
             currency: code,
-            currencyDisplay: 'symbol',
-          }).format(n);
-        } catch (e) {
-          return (SYMBOLS[code] || '') + n.toFixed(2);
+            currencyDisplay: "symbol",
+            maximumFractionDigits: 2
+          }).format(amount);
+        } catch (error) {
+          return currencySymbol() + amount.toFixed(2);
         }
       }
 
-      // Trim trailing ".0" so 20.0% shows as 20%, but 7.5% stays 7.5%.
-      function pctText(v) {
-        return (Math.round(v * 10) / 10).toString().replace(/\.0$/, '') + '%';
+      function formatSigned(value) {
+        return (value < 0 ? "-" : "") + formatMoney(Math.abs(value));
       }
 
-      function flashPop(el) {
-        el.classList.remove('pop');
-        // force reflow so the animation can replay
-        void el.offsetWidth;
-        el.classList.add('pop');
+      function getBilling() {
+        if (state.model === "hourly") {
+          const rate = Math.max(0, numberFrom(fields.hourlyRate, 0));
+          const weeklyHours = Math.max(0, numberFrom(fields.hoursPerWeek, 0));
+          const weeks = Math.max(1, numberFrom(fields.durationWeeks, 1));
+          return {
+            label: "Hourly engagement",
+            revenue: rate * weeklyHours * weeks,
+            hours: Math.max(1, weeklyHours * weeks)
+          };
+        }
+
+        if (state.model === "retainer") {
+          const monthly = Math.max(0, numberFrom(fields.retainerMonthly, 0));
+          const months = Math.max(1, numberFrom(fields.retainerMonths, 1));
+          const hoursPerMonth = Math.max(1, numberFrom(fields.retainerHours, 1));
+          return {
+            label: "Monthly retainer",
+            revenue: monthly * months,
+            hours: Math.max(1, hoursPerMonth * months)
+          };
+        }
+
+        return {
+          label: "Fixed-Price engagement",
+          revenue: Math.max(0, numberFrom(fields.fixedAmount, 0)),
+          hours: Math.max(1, numberFrom(fields.fixedHours, 1))
+        };
       }
 
-      let lastTake = null;
+      function getBrackets() {
+        const rows = Array.from(document.querySelectorAll(".tax-row")).map((row) => {
+          const limitInput = row.querySelector("[data-bracket-limit]");
+          const rateInput = row.querySelector("[data-bracket-rate]");
+          const limitValue = limitInput.value.trim();
+          return {
+            limit: limitValue === "" ? Infinity : Math.max(0, parseFloat(limitValue) || 0),
+            rate: Math.max(0, parseFloat(rateInput.value) || 0) / 100
+          };
+        });
+
+        const finite = rows.filter((row) => row.limit !== Infinity).sort((a, b) => a.limit - b.limit);
+        const infinite = rows.filter((row) => row.limit === Infinity);
+        return finite.concat(infinite.length ? infinite : [{ limit: Infinity, rate: rows.length ? rows[rows.length - 1].rate : 0 }]);
+      }
+
+      function calculateTax(taxableIncome) {
+        let previous = 0;
+        let tax = 0;
+        const items = [];
+        const brackets = getBrackets();
+
+        brackets.forEach((bracket, index) => {
+          if (taxableIncome <= previous) return;
+          const upper = bracket.limit;
+          const taxableSlice = Math.max(0, Math.min(taxableIncome, upper) - previous);
+          const sliceTax = taxableSlice * bracket.rate;
+          if (taxableSlice > 0) {
+            tax += sliceTax;
+            items.push({
+              label: upper === Infinity ? "Above " + formatMoney(previous) : formatMoney(previous) + " to " + formatMoney(upper),
+              rate: bracket.rate,
+              amount: taxableSlice,
+              tax: sliceTax
+            });
+          }
+          previous = upper;
+
+          if (index === brackets.length - 1 && taxableIncome > previous) {
+            const extra = taxableIncome - previous;
+            const extraTax = extra * bracket.rate;
+            tax += extraTax;
+            items.push({
+              label: "Above " + formatMoney(previous),
+              rate: bracket.rate,
+              amount: extra,
+              tax: extraTax
+            });
+          }
+        });
+
+        return { tax, items };
+      }
 
       function calculate() {
-        const price = Math.max(0, parseFloat(els.price.value) || 0);
-        const qty   = Math.max(0, parseFloat(els.qty.value)   || 0);
-        const rate  = Math.min(100, Math.max(0, parseFloat(els.vat.value) || 0));
+        const billing = getBilling();
+        const daysPastDue = Math.max(0, numberFrom(fields.daysPastDue, 0));
+        const annualInterest = Math.max(0, numberFrom(fields.annualInterest, 0)) / 100;
+        const lateInterest = billing.revenue * annualInterest * (daysPastDue / 365);
+        const clientTotal = billing.revenue + lateInterest;
+        const feeRate = Math.max(0, numberFrom(fields.platformFee, 0)) / 100;
+        const platformFee = clientTotal * feeRate;
+        const expenses = Math.max(0, numberFrom(fields.operatingExpenses, 0));
+        const taxableIncome = Math.max(0, clientTotal - platformFee - expenses);
+        const taxResult = calculateTax(taxableIncome);
+        const net = clientTotal - platformFee - expenses - taxResult.tax;
+        const unpaidDays = Math.min(60, Math.max(0, numberFrom(fields.unpaidDays, 0)));
+        const reserveHours = billing.hours * (unpaidDays / Math.max(1, 260 - unpaidDays));
+        const adjustedHours = Math.max(1, billing.hours + reserveHours);
+        const nominalHourly = billing.revenue / Math.max(1, billing.hours);
+        const effectiveHourly = net / adjustedHours;
 
-        const subtotal = price * qty;
-        const tax      = subtotal * (rate / 100);
-        const takeHome = subtotal - tax;
+        return {
+          billing,
+          lateInterest,
+          clientTotal,
+          platformFee,
+          expenses,
+          taxableIncome,
+          tax: taxResult.tax,
+          taxItems: taxResult.items,
+          net,
+          unpaidDays,
+          nominalHourly,
+          effectiveHourly
+        };
+      }
 
-        // Text outputs
-        els.subtotal.textContent = fmt(subtotal);
-        els.grossOut.textContent = fmt(subtotal);
-        els.taxAmt.textContent   = '−' + fmt(tax);
-        els.takeHome.textContent = fmt(takeHome);
-        els.netOut.textContent   = fmt(takeHome);
+      function setText(id, value) {
+        const el = $(id);
+        if (el) el.textContent = value;
+      }
 
-        const p = pctText(rate);
-        els.vatLabel.textContent  = p;
-        els.vatInline.textContent = p;
+      function renderTaxRows() {
+        const list = $("taxBracketList");
+        list.innerHTML = "";
+        state.brackets.forEach((bracket, index) => {
+          const row = document.createElement("div");
+          row.className = "tax-row";
+          row.innerHTML =
+            '<div><label>Income upper limit</label><input data-bracket-limit type="number" min="0" step="1000" placeholder="No cap" value="' + String(bracket.limit) + '"></div>' +
+            '<div><label>Rate (%)</label><input data-bracket-rate type="number" min="0" max="100" step="0.1" value="' + String(bracket.rate) + '"></div>' +
+            '<button class="remove-button" type="button" data-remove-bracket="' + index + '" aria-label="Remove tax bracket">x</button>';
+          list.appendChild(row);
+        });
+      }
 
-        // Currency symbol on the price field
-        els.sym1.textContent = SYMBOLS[els.currency.value] || '';
+      function syncBracketState() {
+        const rows = Array.from(document.querySelectorAll(".tax-row"));
+        if (!rows.length) return;
+        state.brackets = rows.map((row) => {
+          const limit = row.querySelector("[data-bracket-limit]").value.trim();
+          const rate = row.querySelector("[data-bracket-rate]").value.trim();
+          return {
+            limit: limit === "" ? "" : Math.max(0, parseFloat(limit) || 0),
+            rate: Math.max(0, parseFloat(rate) || 0)
+          };
+        });
+      }
 
-        // Slider gradient fill (relative to its own min/max)
-        const min = parseFloat(els.vat.min), max = parseFloat(els.vat.max);
-        const fillPct = ((rate - min) / (max - min)) * 100;
-        els.vat.style.setProperty('--pct', fillPct + '%');
-
-        // Split bar (net vs tax) — guard against subtotal === 0
-        const netShare = subtotal > 0 ? (takeHome / subtotal) * 100 : 100;
-        els.barNet.style.width = netShare + '%';
-        els.barTax.style.width = (100 - netShare) + '%';
-
-        // Animate the headline only when the take-home actually changes
-        if (lastTake !== null && Math.abs(takeHome - lastTake) > 1e-9) {
-          flashPop(els.takeHome);
+      function renderTaxAllocation(items) {
+        const list = $("taxAllocation");
+        list.innerHTML = "";
+        if (!items.length) {
+          const li = document.createElement("li");
+          li.innerHTML = "<span>No taxable income</span><strong>" + formatMoney(0) + "</strong>";
+          list.appendChild(li);
+          return;
         }
-        lastTake = takeHome;
 
-        syncChips(rate);
-      }
-
-      // Highlight the preset chip that matches the current rate
-      function syncChips(rate) {
-        document.querySelectorAll('[data-vat]').forEach((btn) => {
-          const match = Math.abs(parseFloat(btn.dataset.vat) - rate) < 1e-9;
-          btn.classList.toggle('active', match);
+        items.forEach((item) => {
+          const li = document.createElement("li");
+          li.innerHTML = "<span>" + item.label + " at " + (item.rate * 100).toFixed(1).replace(/\\.0$/, "") + "%</span><strong>" + formatMoney(item.tax) + "</strong>";
+          list.appendChild(li);
         });
       }
 
-      // Wire up live updates
-      ['input', 'change'].forEach((evt) => {
-        els.price.addEventListener(evt, calculate);
-        els.qty.addEventListener(evt, calculate);
-        els.vat.addEventListener(evt, calculate);
-        els.currency.addEventListener(evt, calculate);
+      function updateCurrencyPrefixes() {
+        document.querySelectorAll("[data-currency-symbol]").forEach((el) => {
+          el.textContent = currencySymbol();
+        });
+      }
+
+      function update() {
+        const result = calculate();
+        updateCurrencyPrefixes();
+        setText("unpaidDaysOut", String(result.unpaidDays));
+
+        setText("heroNet", formatMoney(result.net));
+        setText("heroHourly", formatMoney(result.effectiveHourly));
+        setText("clientTotal", formatMoney(result.clientTotal));
+        setText("netTakeHome", formatMoney(result.net));
+        setText("effectiveHourly", formatMoney(result.effectiveHourly));
+        setText("nominalHourly", formatMoney(result.nominalHourly));
+        setText("baseRevenue", formatMoney(result.billing.revenue));
+        setText("lateInterest", formatMoney(result.lateInterest));
+        setText("platformFeeOut", formatMoney(result.platformFee));
+        setText("expensesOut", formatMoney(result.expenses));
+        setText("taxOut", formatMoney(result.tax));
+        renderTaxAllocation(result.taxItems);
+
+        setText("invoiceClient", fields.clientName.value || "Client");
+        setText("invoiceProject", fields.projectName.value || "Freelance engagement");
+        setText("invoiceNumberOut", fields.invoiceNumber.value || "Invoice");
+        setText("invoiceDateOut", new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }));
+        setText("invoiceTermsOut", fields.paymentTerm.options[fields.paymentTerm.selectedIndex].text + " - " + Math.max(0, numberFrom(fields.daysPastDue, 0)) + " days past due");
+        setText("invoiceModel", result.billing.label);
+        setText("invoiceBase", formatMoney(result.billing.revenue));
+        setText("invoiceInterest", formatMoney(result.lateInterest));
+        setText("invoiceClientTotal", formatMoney(result.clientTotal));
+        setText("invoicePlatform", formatSigned(-result.platformFee));
+        setText("invoiceExpenses", formatSigned(-result.expenses));
+        setText("invoiceTax", formatSigned(-result.tax));
+        setText("invoiceNet", formatMoney(result.net));
+        setText("invoiceEffective", formatMoney(result.effectiveHourly));
+      }
+
+      function setModel(model) {
+        state.model = model;
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.setAttribute("aria-selected", tab.dataset.model === model ? "true" : "false");
+        });
+        document.querySelectorAll(".model-panel").forEach((panel) => {
+          panel.hidden = panel.dataset.panel !== model;
+        });
+        update();
+      }
+
+      function showToast(message) {
+        const toast = $("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
+      }
+
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => setModel(tab.dataset.model));
       });
 
-      // Preset chips set the slider value
-      document.querySelectorAll('[data-vat]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          els.vat.value = btn.dataset.vat;
-          calculate();
-        });
+      Object.values(fields).forEach((field) => {
+        field.addEventListener("input", update);
+        field.addEventListener("change", update);
       });
 
-      // Footer year (Date is fine in the browser at runtime)
-      try { $('year').textContent = new Date().getFullYear(); } catch (e) {}
+      fields.platformPreset.addEventListener("change", () => {
+        if (fields.platformPreset.value !== "custom") {
+          fields.platformFee.value = fields.platformPreset.value;
+        }
+        update();
+      });
 
-      // First paint
-      calculate();
-    })();
-  </script>
+      $("lateToggle").addEventListener("click", () => {
+        const content = $("lateContent");
+        const nextOpen = content.hidden;
+        content.hidden = !nextOpen;
+        $("lateToggle").setAttribute("aria-expanded", nextOpen ? "true" : "false");
+        $("lateToggle").textContent = nextOpen ? "Collapse" : "Expand";
+      });
 
-  <!-- Activate AdSense units only when a real slot ID has been set -->
-  <script>
-    (function () {
-      try {
-        document.querySelectorAll('ins.adsbygoogle').forEach(function (ins) {
-          var slot = ins.getAttribute('data-ad-slot') || '';
-          // Skip the placeholder so no AdSense error fires before you create a
-          // real ad unit. Replace data-ad-slot="0000000000" with your slot id.
-          if (/^0*$/.test(slot)) return;
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
-        });
-      } catch (e) { /* AdSense blocked/offline — keep the placeholders */ }
+      $("addBracket").addEventListener("click", () => {
+        syncBracketState();
+        state.brackets.push({ limit: "", rate: 24 });
+        renderTaxRows();
+        update();
+      });
+
+      $("taxBracketList").addEventListener("input", () => update());
+      $("taxBracketList").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-remove-bracket]");
+        if (!button) return;
+        if (state.brackets.length <= 1) return;
+        syncBracketState();
+        state.brackets.splice(Number(button.dataset.removeBracket), 1);
+        renderTaxRows();
+        update();
+      });
+
+      $("printInvoice").addEventListener("click", () => window.print());
+      $("copyInvoice").addEventListener("click", async () => {
+        const html = $("invoiceCard").outerHTML;
+        try {
+          await navigator.clipboard.writeText(html);
+          showToast("Copied invoice HTML.");
+        } catch (error) {
+          const area = document.createElement("textarea");
+          area.value = html;
+          document.body.appendChild(area);
+          area.select();
+          document.execCommand("copy");
+          area.remove();
+          showToast("Copied invoice HTML.");
+        }
+      });
+
+      renderTaxRows();
+      update();
     })();
   </script>
 </body>
