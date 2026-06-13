@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XySide | Freelance Invoice & Tax Calculator</title>
+  <meta name="description" content="A beautiful, free calculator for global freelancers. Compute invoice totals and instantly see your take-home pay after cross-border VAT / withholding tax." />
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7466854383553853" crossorigin="anonymous"></script>
+
+  <!-- Tailwind CSS (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            ink: '#06070f',
+          },
+          boxShadow: {
+            glow: '0 0 60px -15px rgba(99,102,241,0.45)',
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    html, body { font-family: 'Inter', sans-serif; }
+    body {
+      background-color: #06070f;
+      background-image:
+        radial-gradient(900px 600px at 12% -10%, rgba(79,70,229,0.20), transparent 60%),
+        radial-gradient(800px 600px at 100% 0%, rgba(168,85,247,0.16), transparent 55%),
+        radial-gradient(700px 500px at 50% 120%, rgba(56,189,248,0.12), transparent 60%);
+      min-height: 100vh;
+    }
+
+    /* Floating ambient glow blobs */
+    .blob {
+      position: fixed;
+      border-radius: 9999px;
+      filter: blur(90px);
+      opacity: 0.55;
+      z-index: 0;
+      pointer-events: none;
+      will-change: transform;
+    }
+    .blob-1 { top: -120px; left: -100px; width: 420px; height: 420px;
+      background: radial-gradient(circle at 30% 30%, #6366f1, transparent 70%);
+      animation: float1 16s ease-in-out infinite; }
+    .blob-2 { top: 10%; right: -140px; width: 460px; height: 460px;
+      background: radial-gradient(circle at 70% 30%, #a855f7, transparent 70%);
+      animation: float2 19s ease-in-out infinite; }
+    .blob-3 { bottom: -160px; left: 30%; width: 480px; height: 480px;
+      background: radial-gradient(circle at 50% 50%, #22d3ee, transparent 72%);
+      opacity: 0.35;
+      animation: float3 22s ease-in-out infinite; }
+
+    @keyframes float1 { 0%,100%{ transform: translate(0,0) scale(1);} 50%{ transform: translate(40px,30px) scale(1.08);} }
+    @keyframes float2 { 0%,100%{ transform: translate(0,0) scale(1);} 50%{ transform: translate(-50px,40px) scale(1.1);} }
+    @keyframes float3 { 0%,100%{ transform: translate(0,0) scale(1);} 50%{ transform: translate(30px,-40px) scale(1.06);} }
+
+    /* Glassmorphism */
+    .glass {
+      background: rgba(255,255,255,0.045);
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      border: 1px solid rgba(255,255,255,0.09);
+      box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6), inset 0 1px 0 0 rgba(255,255,255,0.06);
+    }
+    .glass-soft {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    /* Gradient border ring around the headline result */
+    .ring-grad { position: relative; }
+    .ring-grad::before {
+      content: "";
+      position: absolute; inset: 0;
+      border-radius: 1.5rem;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(99,102,241,0.8), rgba(168,85,247,0.6), rgba(34,211,238,0.5));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Inputs */
+    .field {
+      background: rgba(10,12,24,0.55);
+      border: 1px solid rgba(255,255,255,0.10);
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .field:focus-within {
+      border-color: rgba(129,140,248,0.7);
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.18);
+      background: rgba(12,14,28,0.7);
+    }
+    .field input, .field select { background: transparent; outline: none; }
+    .field input::-webkit-outer-spin-button,
+    .field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .field input[type=number] { -moz-appearance: textfield; }
+    select option { background: #0b0d1a; color: #e5e7eb; }
+
+    /* Range slider */
+    .slider {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 8px; border-radius: 9999px;
+      background: linear-gradient(90deg, #6366f1 0%, #a855f7 var(--pct,40%), rgba(255,255,255,0.10) var(--pct,40%));
+      outline: none; cursor: pointer;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      height: 22px; width: 22px; border-radius: 9999px;
+      background: #ffffff; border: 0;
+      box-shadow: 0 0 0 5px rgba(99,102,241,0.30), 0 6px 16px rgba(0,0,0,0.5);
+      cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .slider::-webkit-slider-thumb:hover { transform: scale(1.18); box-shadow: 0 0 0 7px rgba(99,102,241,0.30), 0 6px 16px rgba(0,0,0,0.55); }
+    .slider::-moz-range-thumb {
+      height: 22px; width: 22px; border-radius: 9999px;
+      background: #ffffff; border: 0;
+      box-shadow: 0 0 0 5px rgba(99,102,241,0.30), 0 6px 16px rgba(0,0,0,0.5);
+      cursor: pointer;
+    }
+
+    .grad-text {
+      background: linear-gradient(120deg, #818cf8 0%, #c084fc 45%, #67e8f9 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+
+    /* Tax preset chips */
+    .chip {
+      transition: all .18s ease;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+    }
+    .chip:hover { border-color: rgba(129,140,248,0.6); color: #fff; transform: translateY(-1px); }
+    .chip.active {
+      border-color: transparent;
+      background: linear-gradient(120deg, #6366f1, #a855f7);
+      color: #fff; box-shadow: 0 8px 20px -8px rgba(124,58,237,0.7);
+    }
+
+    /* Subtle pop animation when the headline number changes */
+    @keyframes pop { 0%{ transform: scale(0.985); } 60%{ transform: scale(1.012);} 100%{ transform: scale(1);} }
+    .pop { animation: pop .35s ease; }
+
+    /* Ad placeholder dashed shimmer */
+    .ad-slot {
+      border: 1.5px dashed rgba(255,255,255,0.16);
+      background:
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0 12px, rgba(255,255,255,0.0) 12px 24px);
+    }
+    .ad-slot ins.adsbygoogle { width: 100%; }
+    /* Once a real AdSense creative fills the slot, hide the placeholder caption */
+    .ad-slot:has(ins[data-ad-status="filled"]) .ad-fallback { display: none; }
+    .ad-slot:has(ins[data-ad-status="filled"]) {
+      border-style: solid; border-color: rgba(255,255,255,0.08); background: transparent;
+    }
+
+    ::selection { background: rgba(129,140,248,0.35); }
+  </style>
+</head>
+
+<body class="text-slate-200 antialiased selection:text-white">
+  <!-- Ambient glow blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+    <!-- Header -->
+    <header class="flex flex-wrap items-center justify-between gap-4 mb-10">
+      <div class="flex items-center gap-3">
+        <div class="grid place-items-center h-11 w-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 shadow-glow">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+            <path d="M8 6h8M8 10h8M8 14h5"></path>
+          </svg>
+        </div>
+        <div>
+          <a href="/" class="text-sm font-semibold tracking-wide text-white leading-tight hover:text-indigo-100 transition-colors">XySide</a>
+          <p class="text-[11px] text-slate-400 leading-tight">Freelance toolkit</p>
+        </div>
+      </div>
+      <nav class="hidden md:flex items-center gap-1 glass-soft rounded-full p-1 text-sm font-medium text-slate-300" aria-label="Primary navigation">
+        <a href="/" class="rounded-full px-4 py-2 text-white bg-white/10">Home</a>
+        <a href="/blog/tax-deductions.html" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white transition-colors">Tax Guide</a>
+        <a href="/privacy.html" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white transition-colors">Privacy Policy</a>
+        <a href="/terms.html" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white transition-colors">Terms</a>
+      </nav>
+      <div class="hidden sm:flex items-center gap-2 glass-soft rounded-full px-4 py-1.5 text-xs text-slate-300">
+        <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        100% free &middot; no sign-up
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="text-center mb-10 sm:mb-14">
+      <span class="inline-flex items-center gap-2 glass-soft rounded-full px-4 py-1.5 text-xs font-medium text-indigo-200 mb-5">
+        🌍 Built for global freelancers
+      </span>
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.05]">
+        XySide<br class="hidden sm:block" />
+        <span class="grad-text">Invoice &amp; Tax Calculator</span>
+      </h1>
+      <p class="mt-5 max-w-2xl mx-auto text-base sm:text-lg text-slate-400">
+        Use the Freelance Invoice &amp; Tax Calculator to price your work, dial in the cross-border VAT / withholding rate, and instantly see the amount that actually lands in your account.
+      </p>
+    </section>
+
+    <!-- Main grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+      <!-- LEFT: Calculator inputs -->
+      <div class="lg:col-span-3 glass rounded-3xl p-6 sm:p-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg font-semibold text-white">Invoice details</h2>
+          <!-- Currency selector -->
+          <label class="field flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15.3 15.3 0 0 1 0 20M12 2a15.3 15.3 0 0 0 0 20"></path></svg>
+            <select id="currency" class="text-sm font-medium text-white pr-1">
+              <option value="USD">USD $</option>
+              <option value="EUR">EUR €</option>
+              <option value="GBP">GBP £</option>
+              <option value="JPY">JPY ¥</option>
+              <option value="CNY">CNY ¥</option>
+              <option value="INR">INR ₹</option>
+              <option value="CAD">CAD $</option>
+              <option value="AUD">AUD $</option>
+              <option value="SGD">SGD $</option>
+              <option value="CHF">CHF</option>
+              <option value="BRL">BRL R$</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- Unit price + Quantity -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label for="price" class="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"></path><circle cx="7" cy="7" r="1.2" fill="currentColor"></circle></svg>
+              Unit price
+            </label>
+            <div class="field rounded-xl px-4 py-3 flex items-center gap-2">
+              <span id="sym1" class="text-slate-400 text-lg select-none">$</span>
+              <input id="price" type="number" inputmode="decimal" min="0" step="0.01" value="100"
+                     class="w-full text-lg font-semibold text-white placeholder-slate-500" placeholder="0.00" />
+            </div>
+          </div>
+
+          <div>
+            <label for="qty" class="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-fuchsia-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"></path></svg>
+              Quantity / hours
+            </label>
+            <div class="field rounded-xl px-4 py-3 flex items-center gap-2">
+              <span class="text-slate-400 text-lg select-none">×</span>
+              <input id="qty" type="number" inputmode="decimal" min="0" step="1" value="1"
+                     class="w-full text-lg font-semibold text-white placeholder-slate-500" placeholder="0" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtotal readout -->
+        <div class="glass-soft rounded-2xl px-5 py-4 mb-7 flex items-center justify-between">
+          <span class="text-sm text-slate-400">Subtotal (before tax)</span>
+          <span id="subtotal" class="text-xl font-bold text-white tabular-nums">$100.00</span>
+        </div>
+
+        <!-- Tax slider -->
+        <div class="mb-2 flex items-end justify-between">
+          <label for="vat" class="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>
+            Cross-border VAT / Tax rate
+          </label>
+          <span id="vatLabel" class="text-2xl font-extrabold grad-text tabular-nums">20%</span>
+        </div>
+        <input id="vat" type="range" min="0" max="40" step="0.5" value="20" class="slider my-4" />
+        <div class="flex justify-between text-[11px] text-slate-500 mb-5">
+          <span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span>
+        </div>
+
+        <!-- Preset chips -->
+        <div class="flex flex-wrap gap-2">
+          <span class="text-xs text-slate-500 self-center mr-1">Quick presets:</span>
+          <button class="chip rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-300" data-vat="0">0% · None</button>
+          <button class="chip rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-300" data-vat="7.5">7.5% · US est.</button>
+          <button class="chip rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-300" data-vat="19">19% · DE</button>
+          <button class="chip rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-300" data-vat="20">20% · UK/EU</button>
+          <button class="chip rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-300" data-vat="23">23% · IE/PT</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Result + Ad -->
+      <div class="lg:col-span-2 flex flex-col gap-6">
+
+        <!-- Take-home result -->
+        <div class="ring-grad glass rounded-3xl p-6 sm:p-7 relative overflow-hidden">
+          <div class="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-fuchsia-500/20 blur-3xl"></div>
+          <div class="relative">
+            <p class="flex items-center gap-2 text-sm font-medium text-slate-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
+              Your take-home
+            </p>
+            <p id="takeHome" class="mt-2 text-4xl sm:text-5xl font-black text-white tracking-tight tabular-nums">$80.00</p>
+            <p class="mt-1 text-xs text-slate-400">After deducting <span id="vatInline" class="text-slate-300 font-medium">20%</span> tax</p>
+
+            <div class="mt-6 space-y-3">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-400">Gross subtotal</span>
+                <span id="grossOut" class="font-semibold text-slate-100 tabular-nums">$100.00</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-400">Tax / VAT deducted</span>
+                <span id="taxAmt" class="font-semibold text-rose-300 tabular-nums">−$20.00</span>
+              </div>
+              <div class="h-px bg-white/10 my-1"></div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-white">Net to your account</span>
+                <span id="netOut" class="text-lg font-bold grad-text tabular-nums">$80.00</span>
+              </div>
+            </div>
+
+            <!-- effective rate bar -->
+            <div class="mt-6">
+              <div class="flex justify-between text-[11px] text-slate-500 mb-1.5">
+                <span>Take-home</span><span>Tax</span>
+              </div>
+              <div class="h-2.5 w-full rounded-full bg-white/10 overflow-hidden flex">
+                <div id="barNet" class="h-full bg-gradient-to-r from-emerald-400 to-teal-400" style="width:80%"></div>
+                <div id="barTax" class="h-full bg-gradient-to-r from-fuchsia-500 to-indigo-500" style="width:20%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ad Space — Google AdSense (publisher ca-pub-7466854383553853) -->
+        <div class="ad-slot glass-soft rounded-3xl p-6 grid place-items-center text-center min-h-[260px] overflow-hidden"
+             aria-label="Advertisement space" role="complementary">
+          <!-- Live ad unit. Replace data-ad-slot="0000000000" with your real 10-digit
+               slot ID from AdSense → Ads → By ad unit → Display ad. -->
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-7466854383553853"
+               data-ad-slot="0000000000"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+          <!-- Elegant placeholder, shown until a real ad fills the slot -->
+          <div class="ad-fallback space-y-2">
+            <div class="mx-auto grid place-items-center h-10 w-10 rounded-xl bg-white/5 border border-white/10">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 9h18"></path></svg>
+            </div>
+            <p class="text-sm font-semibold text-slate-300 tracking-wide">Ad Space</p>
+            <p class="text-[11px] text-slate-500 max-w-[200px] mx-auto">Reserved for Google AdSense · 300×250</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Secondary Ad Space — Google AdSense leaderboard -->
+    <div class="ad-slot glass-soft rounded-3xl p-5 mt-6 grid place-items-center text-center min-h-[110px] overflow-hidden"
+         aria-label="Advertisement space" role="complementary">
+      <!-- Live ad unit. Replace data-ad-slot="0000000000" with your real slot ID. -->
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-7466854383553853"
+           data-ad-slot="0000000000"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <div class="ad-fallback">
+        <p class="text-sm font-semibold text-slate-300 tracking-wide">Ad Space</p>
+        <p class="text-[11px] text-slate-500">Reserved for Google AdSense · 728×90 leaderboard</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-12 text-center">
+      <nav class="mx-auto mb-5 flex max-w-2xl flex-wrap items-center justify-center gap-2 text-xs font-medium text-slate-400" aria-label="Footer navigation">
+        <a href="/" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:border-indigo-300/50 hover:text-white transition-colors">Calculator</a>
+        <a href="/blog/tax-deductions.html" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:border-indigo-300/50 hover:text-white transition-colors">Tax Guide</a>
+        <a href="/blog/" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:border-indigo-300/50 hover:text-white transition-colors">Blog</a>
+        <a href="/privacy.html" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:border-indigo-300/50 hover:text-white transition-colors">Privacy Policy</a>
+        <a href="/terms.html" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:border-indigo-300/50 hover:text-white transition-colors">Terms of Service</a>
+      </nav>
+      <p class="text-xs text-slate-500 max-w-2xl mx-auto">
+        Estimates only. Actual VAT, withholding, and income-tax obligations vary by country and treaty. Always confirm with a qualified local tax advisor.
+      </p>
+      <p class="mt-3 text-xs text-slate-600">
+        &copy; 2026 XySide. All rights reserved.
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const $ = (id) => document.getElementById(id);
+      const els = {
+        price:    $('price'),
+        qty:      $('qty'),
+        vat:      $('vat'),
+        currency: $('currency'),
+        sym1:     $('sym1'),
+        vatLabel: $('vatLabel'),
+        vatInline:$('vatInline'),
+        subtotal: $('subtotal'),
+        grossOut: $('grossOut'),
+        taxAmt:   $('taxAmt'),
+        takeHome: $('takeHome'),
+        netOut:   $('netOut'),
+        barNet:   $('barNet'),
+        barTax:   $('barTax'),
+      };
+
+      // Currency symbols for the inline prefix on the price input
+      const SYMBOLS = {
+        USD:'$', EUR:'€', GBP:'£', JPY:'¥', CNY:'¥', INR:'₹',
+        CAD:'$', AUD:'$', SGD:'$', CHF:'Fr', BRL:'R$'
+      };
+
+      // Format a number as currency using the user's chosen currency code.
+      function fmt(value) {
+        const code = els.currency.value;
+        const n = isFinite(value) ? value : 0;
+        try {
+          return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: code,
+            currencyDisplay: 'symbol',
+          }).format(n);
+        } catch (e) {
+          return (SYMBOLS[code] || '') + n.toFixed(2);
+        }
+      }
+
+      // Trim trailing ".0" so 20.0% shows as 20%, but 7.5% stays 7.5%.
+      function pctText(v) {
+        return (Math.round(v * 10) / 10).toString().replace(/\.0$/, '') + '%';
+      }
+
+      function flashPop(el) {
+        el.classList.remove('pop');
+        // force reflow so the animation can replay
+        void el.offsetWidth;
+        el.classList.add('pop');
+      }
+
+      let lastTake = null;
+
+      function calculate() {
+        const price = Math.max(0, parseFloat(els.price.value) || 0);
+        const qty   = Math.max(0, parseFloat(els.qty.value)   || 0);
+        const rate  = Math.min(100, Math.max(0, parseFloat(els.vat.value) || 0));
+
+        const subtotal = price * qty;
+        const tax      = subtotal * (rate / 100);
+        const takeHome = subtotal - tax;
+
+        // Text outputs
+        els.subtotal.textContent = fmt(subtotal);
+        els.grossOut.textContent = fmt(subtotal);
+        els.taxAmt.textContent   = '−' + fmt(tax);
+        els.takeHome.textContent = fmt(takeHome);
+        els.netOut.textContent   = fmt(takeHome);
+
+        const p = pctText(rate);
+        els.vatLabel.textContent  = p;
+        els.vatInline.textContent = p;
+
+        // Currency symbol on the price field
+        els.sym1.textContent = SYMBOLS[els.currency.value] || '';
+
+        // Slider gradient fill (relative to its own min/max)
+        const min = parseFloat(els.vat.min), max = parseFloat(els.vat.max);
+        const fillPct = ((rate - min) / (max - min)) * 100;
+        els.vat.style.setProperty('--pct', fillPct + '%');
+
+        // Split bar (net vs tax) — guard against subtotal === 0
+        const netShare = subtotal > 0 ? (takeHome / subtotal) * 100 : 100;
+        els.barNet.style.width = netShare + '%';
+        els.barTax.style.width = (100 - netShare) + '%';
+
+        // Animate the headline only when the take-home actually changes
+        if (lastTake !== null && Math.abs(takeHome - lastTake) > 1e-9) {
+          flashPop(els.takeHome);
+        }
+        lastTake = takeHome;
+
+        syncChips(rate);
+      }
+
+      // Highlight the preset chip that matches the current rate
+      function syncChips(rate) {
+        document.querySelectorAll('[data-vat]').forEach((btn) => {
+          const match = Math.abs(parseFloat(btn.dataset.vat) - rate) < 1e-9;
+          btn.classList.toggle('active', match);
+        });
+      }
+
+      // Wire up live updates
+      ['input', 'change'].forEach((evt) => {
+        els.price.addEventListener(evt, calculate);
+        els.qty.addEventListener(evt, calculate);
+        els.vat.addEventListener(evt, calculate);
+        els.currency.addEventListener(evt, calculate);
+      });
+
+      // Preset chips set the slider value
+      document.querySelectorAll('[data-vat]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          els.vat.value = btn.dataset.vat;
+          calculate();
+        });
+      });
+
+      // Footer year (Date is fine in the browser at runtime)
+      try { $('year').textContent = new Date().getFullYear(); } catch (e) {}
+
+      // First paint
+      calculate();
+    })();
+  </script>
+
+  <!-- Activate AdSense units only when a real slot ID has been set -->
+  <script>
+    (function () {
+      try {
+        document.querySelectorAll('ins.adsbygoogle').forEach(function (ins) {
+          var slot = ins.getAttribute('data-ad-slot') || '';
+          // Skip the placeholder so no AdSense error fires before you create a
+          // real ad unit. Replace data-ad-slot="0000000000" with your slot id.
+          if (/^0*$/.test(slot)) return;
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+        });
+      } catch (e) { /* AdSense blocked/offline — keep the placeholders */ }
+    })();
+  </script>
+</body>
+</html>
